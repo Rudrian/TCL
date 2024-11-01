@@ -1,0 +1,47 @@
+CREATE DATABASE bd_exporta;
+USE bd_exporta;
+
+CREATE TABLE departamentos (
+    id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    nome VARCHAR(60) NOT NULL,
+    localizacao VARCHAR(50) NOT NULL,
+    orcamento DECIMAL(10,2) NOT NULL
+);
+
+INSERT INTO departamentos(nome, localizacao, orcamento)
+VALUES 
+    ('Dono', 'São Paulo', 100000.00), 
+    ('RH', 'São Paulo', 55000.00),
+    ('Empregado', 'Rio de Janeiro', 40000.00), 
+    ('Assistente', 'Curitiba', 75000.00),
+    ('Empregado', 'Espirito Santo', 40000.00);
+
+-- Verificação da variável de sistema para diretórios de arquivos
+SHOW VARIABLES LIKE 'secure_file_priv';
+
+delete from departamentos where id = '1,2,3,4,5';
+
+-- Exportação dos dados da tabela 'departamentos' para um arquivo CSV
+SELECT * FROM departamentos
+INTO OUTFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\depto.csv'
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"' 
+LINES TERMINATED BY '\r\n'; 
+
+-- Carga dos dados do CSV
+LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\depto.csv'
+INTO TABLE departamentos
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"' 
+LINES TERMINATED BY '\n';
+
+-- Início da transação para atualizações
+START TRANSACTION;
+
+UPDATE departamentos SET orcamento = orcamento + 5000.00 WHERE nome = 'Dono';
+savepoint ajuste_parcial;
+
+UPDATE departamentos SET orcamento = orcamento + 5000.00 WHERE nome = 'Empregado';
+rollback to ajuste_parcial;
+
+COMMIT; -- Confirma a transação
